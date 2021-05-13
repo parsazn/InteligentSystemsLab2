@@ -6,7 +6,7 @@ import org.jgap.IChromosome;
 public class FitnessFunc extends FitnessFunction {
     @Override
     protected double evaluate(IChromosome iChromosome) {
-        int[] chromosome = SudokuGa.genes2Sudokus(iChromosome);
+        int[] chromosome = chromosomeIntoSudoku(SudokuGa.genes2Sudokus(iChromosome));
         return uniqueInColumn(chromosome) + uniqueInRow(chromosome) + uniqueInSquare(chromosome);
     }
 
@@ -23,30 +23,43 @@ public class FitnessFunc extends FitnessFunction {
         return uniqueValues;
     }
 
+    private int[] chromosomeIntoSudoku(int[] chromosome){
+        int[] mainSudoku = SudokuGa.sudoku_Lineal.clone();
+        int j = 0;
+        for (int i = 0; i < mainSudoku.length; i++) {
+
+            if(mainSudoku[i]==0){
+                mainSudoku[i]=chromosome[j];
+                j++;
+            }
+        }
+        return mainSudoku;
+    }
+
     private int uniqueInRow(int[] numbers) {
-        int uniqueValues = 0;
+        int satisfiedConstraints = 0;
         int[][] rows = new int[9][9];
         for (int i = 0; i < 9; i++) {
             System.arraycopy(numbers, i * 9, rows[i], 0, 9);
-            uniqueValues += countDistinct(rows[i]);
+            if(countDistinct(rows[i])==9) satisfiedConstraints +=1;
         }
-        return uniqueValues;
+        return satisfiedConstraints;
     }
 
     private int uniqueInColumn(int[] numbers) {
-        int uniqueValues = 0;
+        int satisfiedConstraints = 0;
         int[][] columns = new int[9][9];
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 columns[i][j] = numbers[i + 9 * j];
             }
-            uniqueValues += countDistinct(columns[i]);
+            if(countDistinct(columns[i])==9) satisfiedConstraints +=1;
         }
-        return uniqueValues;
+        return satisfiedConstraints;
     }
 
     private int uniqueInSquare(int[] numbers) {
-        int uniqueValues = 0;
+        int satisfiedConstraints = 0;
         int[][] squares = new int[9][9];
         for (int k = 0; k < 9; k++) {
             for (int i = 0; i < 3; i++) {
@@ -54,9 +67,9 @@ public class FitnessFunc extends FitnessFunction {
                     squares[k][j + i * 3] = numbers[(3 * (k % 3) + j + (i + k / 3 * 3) * 9)];
                 }
             }
-            uniqueValues += countDistinct(squares[k]);
+            if(countDistinct(squares[k])==9) satisfiedConstraints +=1;
         }
-        return uniqueValues;
+        return satisfiedConstraints;
     }
 }
 //0,0 3*0+0+0*9

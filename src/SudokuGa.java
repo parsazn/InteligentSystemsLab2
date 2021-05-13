@@ -1,9 +1,13 @@
 import com.qqwing.QQWing;
 import org.jgap.*;
+import org.jgap.impl.CrossoverOperator;
 import org.jgap.impl.DefaultConfiguration;
 import org.jgap.impl.IntegerGene;
+import org.jgap.impl.MutationOperator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 
 public class SudokuGa {
@@ -19,11 +23,16 @@ public class SudokuGa {
     private static final int SUDOKU_SIZE = 9; //  sudoku size = 9
     private static final int BLOCK_SIZE = 3;  //   block size = 3
     private static final int SUDOKU_TOTAL_SIZE = SUDOKU_SIZE * SUDOKU_SIZE;
+    public static int[] sudoku_Lineal;
 
     public static void findSolution(QQWing s) throws Exception {
         boolean[] DefaultValues = new boolean[81];//Here we create a new matrix same as the other but we check if the value is zero or not
         //whole sudoku but in only one line
-        int[] sudoku_Lineal = s.getPuzzle();
+        ArrayList<Integer> arrayListSudoku = new ArrayList<>();
+        sudoku_Lineal = s.getPuzzle();
+        for (int i:sudoku_Lineal) {
+            arrayListSudoku.add(i);
+        }
         setNumbers(sudoku_Lineal, DefaultValues); //we get the default values in our sudoku (where the values are not 0 )
         //Setting
         // ---------------------------------------------------------------------
@@ -32,18 +41,19 @@ public class SudokuGa {
         FitnessFunction myFunc = new FitnessFunc();
         conf.setFitnessFunction(myFunc);
         // ---------------------------------------------------------------------
-        Gene[] sampleGenes = new Gene[SUDOKU_TOTAL_SIZE]; //array of Genes, Gene is single sudoku cell
-        for (int i = 0; i < SUDOKU_TOTAL_SIZE; i++) {
-            if (DefaultValues[i]) {
-                sampleGenes[i] = new IntegerGene(conf, sudoku_Lineal[i], sudoku_Lineal[i]);//we assign which element we should put
-            } else {
+        System.out.println(Collections.frequency(arrayListSudoku, 0));
+        Gene[] sampleGenes = new Gene[Collections.frequency(arrayListSudoku, 0)]; //array of Genes, Gene is single sudoku cell
+        for (int i = 0; i < sampleGenes.length; i++) {
                 sampleGenes[i] = new IntegerGene(conf, 1, 9);//the JPAG it self changes the values randomly
-            }
         }
         // ---------------------------------------------------------------------
         IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is one full sudoku with default values and random values
         conf.setSampleChromosome(sampleChromosome);
         conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
+//        GeneticOperator mutationOperator = new MutationOperator(conf, 3);
+////        GeneticOperator crossoverOperator = new CrossoverOperator(conf);
+//        conf.addGeneticOperator(mutationOperator);
+////        conf.addGeneticOperator(crossoverOperator);
         Genotype population;
 
         population = Genotype.randomInitialGenotype(conf);
@@ -75,13 +85,10 @@ public class SudokuGa {
 
     //converting each chromosome to a lineal array ( so that we can change the Sudoku )
     public static int[] genes2Sudokus(IChromosome idx) {
-        int num = 0;
-        int[] res = new int[81];
+        int[] res = new int[idx.size()];
         for (int i = 0; i < idx.size(); ++i) {
-            res[num] = (int) idx.getGene(i).getAllele();
-            ++num;
+            res[i] = (int) idx.getGene(i).getAllele();
         }
-        res = Arrays.copyOf(res, num);
         return res;
     }
 
