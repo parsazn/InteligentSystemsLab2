@@ -30,7 +30,7 @@ public class SudokuGa {
         //whole sudoku but in only one line
         ArrayList<Integer> arrayListSudoku = new ArrayList<>();
         sudoku_Lineal = s.getPuzzle();
-        for (int i:sudoku_Lineal) {
+        for (int i : sudoku_Lineal) {
             arrayListSudoku.add(i);
         }
         setNumbers(sudoku_Lineal, DefaultValues); //we get the default values in our sudoku (where the values are not 0 )
@@ -41,10 +41,9 @@ public class SudokuGa {
         FitnessFunction myFunc = new FitnessFunc();
         conf.setFitnessFunction(myFunc);
         // ---------------------------------------------------------------------
-        System.out.println(Collections.frequency(arrayListSudoku, 0));
         Gene[] sampleGenes = new Gene[Collections.frequency(arrayListSudoku, 0)]; //array of Genes, Gene is single sudoku cell
         for (int i = 0; i < sampleGenes.length; i++) {
-                sampleGenes[i] = new IntegerGene(conf, 1, 9);//the JPAG it self changes the values randomly
+            sampleGenes[i] = new IntegerGene(conf, 1, 9);//the JGAP it self changes the values randomly
         }
         // ---------------------------------------------------------------------
         IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is one full sudoku with default values and random values
@@ -64,7 +63,7 @@ public class SudokuGa {
         System.out.println("These are the evolutions so far");
         IChromosome[] evols = population.getChromosomes();
         for (IChromosome I : evols) {
-            s.setPuzzle(genes2Sudokus(I));
+            s.setPuzzle(chromosomeIntoSudoku(I));
             s.printPuzzle();
         }
         //here is the Best one
@@ -72,7 +71,7 @@ public class SudokuGa {
         IChromosome bestSolutionSoFar = population.getFittestChromosome();
         System.out.println("The best solution has a fitness value of " +
                 bestSolutionSoFar.getFitnessValue());
-        s.setPuzzle(genes2Sudokus(bestSolutionSoFar));
+        s.setPuzzle(chromosomeIntoSudoku(bestSolutionSoFar));
         s.printPuzzle();
     }
 
@@ -86,10 +85,22 @@ public class SudokuGa {
     //converting each chromosome to a lineal array ( so that we can change the Sudoku )
     public static int[] genes2Sudokus(IChromosome idx) {
         int[] res = new int[idx.size()];
-        for (int i = 0; i < idx.size(); ++i) {
+        for (int i = 0; i < res.length; i++) {
             res[i] = (int) idx.getGene(i).getAllele();
         }
         return res;
+    }
+
+    public static int[] chromosomeIntoSudoku(IChromosome idx) {
+        int[] chromosome = genes2Sudokus(idx);
+        int[] mainSudoku = SudokuGa.sudoku_Lineal.clone();
+        int j = 0;
+        for (int i = 0; i < mainSudoku.length; i++) {
+            if (mainSudoku[i] == 0) {
+                mainSudoku[i] = chromosome[j++];
+            }
+        }
+        return mainSudoku;
     }
 
     public static void main(String[] args) throws Exception {
