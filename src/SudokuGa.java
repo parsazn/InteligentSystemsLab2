@@ -24,9 +24,9 @@ public class SudokuGa {
     private static final int BLOCK_SIZE = 3;  //   block size = 3
     private static final int SUDOKU_TOTAL_SIZE = SUDOKU_SIZE * SUDOKU_SIZE;
     public static int[] sudoku_Lineal;
+    public static boolean[] DefaultValues = new boolean[81];//Here we create a new matrix same as the other but we check if the value is zero or not
 
     public static void findSolution(QQWing s) throws Exception {
-        boolean[] DefaultValues = new boolean[81];//Here we create a new matrix same as the other but we check if the value is zero or not
         //whole sudoku but in only one line
         ArrayList<Integer> arrayListSudoku = new ArrayList<>();
         sudoku_Lineal = s.getPuzzle();
@@ -42,8 +42,10 @@ public class SudokuGa {
         conf.setFitnessFunction(myFunc);
         // ---------------------------------------------------------------------
         Gene[] sampleGenes = new Gene[Collections.frequency(arrayListSudoku, 0)]; //array of Genes, Gene is single sudoku cell
-        for (int i = 0; i < sampleGenes.length; i++) {
-            sampleGenes[i] = new IntegerGene(conf, 1, 9);//the JGAP it self changes the values randomly
+
+        Integer[] possibleNumbers = getRandomizedChromosome();
+        for (int i = 0; i < possibleNumbers.length; i++) {
+            sampleGenes[i] = new IntegerGene(conf, possibleNumbers[i], possibleNumbers[i]);
         }
         // ---------------------------------------------------------------------
         IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is one full sudoku with default values and random values
@@ -82,6 +84,34 @@ public class SudokuGa {
         }
     }
 
+    private static ArrayList<Integer>[] getChromosomeRows(IChromosome idx) {
+        @SuppressWarnings("unchecked") ArrayList<Integer>[] chromosomeRows = (ArrayList<Integer>[]) new ArrayList[SUDOKU_SIZE];
+        int[] chromosome = genes2Sudokus(idx);
+        for (int i = 0; i < SUDOKU_SIZE; i++) {
+            chromosomeRows[i] = new ArrayList<>();
+            for (int j = 0; j < SUDOKU_SIZE; j++) {
+                if(!DefaultValues[i*SUDOKU_SIZE+j]) chromosomeRows[i].add(chromosome[i*SUDOKU_SIZE+j]);
+            }
+        }
+        return chromosomeRows;
+    }
+
+    private static Integer[] getRandomizedChromosome() {
+        @SuppressWarnings("unchecked") ArrayList<Integer>[] chromosomePossibleNums = (ArrayList<Integer>[]) new ArrayList[SUDOKU_SIZE];
+        ArrayList<Integer> possibleNums = new ArrayList<>();
+        for (int i = 0; i < SUDOKU_SIZE; i++) {
+            chromosomePossibleNums[i] = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9));
+            for (int j = 0; j < SUDOKU_SIZE; j++) {
+                if(sudoku_Lineal[i*SUDOKU_SIZE+j]!=0) chromosomePossibleNums[i].remove(Integer.valueOf(sudoku_Lineal[i*SUDOKU_SIZE+j]));
+            }
+            Collections.shuffle(chromosomePossibleNums[i]);
+            possibleNums.addAll(chromosomePossibleNums[i]);
+        }
+        Integer[] linearizedNumbers = new Integer[possibleNums.size()];
+        linearizedNumbers = possibleNums.toArray(linearizedNumbers);
+        return linearizedNumbers;
+    }
+
     //converting each chromosome to a lineal array ( so that we can change the Sudoku )
     public static int[] genes2Sudokus(IChromosome idx) {
         int[] res = new int[idx.size()];
@@ -118,8 +148,6 @@ public class SudokuGa {
         MySudoku.printSolution();
 */
     }
-
-
 }
 
 
