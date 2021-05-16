@@ -7,7 +7,7 @@ public class FitnessFunc extends FitnessFunction {
     @Override
     protected double evaluate(IChromosome iChromosome) {
         int[] chromosome = SudokuGa.chromosomeIntoSudoku(iChromosome);
-        return uniqueInColumn(chromosome) + uniqueInRow(chromosome) + uniqueInSquare(chromosome);
+        return uniqueInColumn(chromosome) + uniqueInSquare(chromosome);
     }
 
     private int countDistinct(int[] arr) {

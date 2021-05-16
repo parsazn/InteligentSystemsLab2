@@ -51,7 +51,7 @@ public class SudokuGa {
         IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is one full sudoku with default values and random values
         conf.setSampleChromosome(sampleChromosome);
         conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
-        GeneticOperator myMutationOperator = new MutationOp(conf, 12);
+        GeneticOperator myMutationOperator = new MutationOp(conf, 6);
 //        GeneticOperator crossoverOperator = new CrossoverOperator(conf);
         conf.addGeneticOperator(myMutationOperator);
 ////        conf.addGeneticOperator(crossoverOperator);
