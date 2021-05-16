@@ -52,9 +52,9 @@ public class SudokuGa {
         conf.setSampleChromosome(sampleChromosome);
         conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
         GeneticOperator myMutationOperator = new MutationOp(conf, 6);
-//        GeneticOperator crossoverOperator = new CrossoverOperator(conf);
+        GeneticOperator crossoverOperator = new CrossoverOp(conf);
         conf.addGeneticOperator(myMutationOperator);
-////        conf.addGeneticOperator(crossoverOperator);
+        conf.addGeneticOperator(crossoverOperator);
         Genotype population;
 
         population = Genotype.randomInitialGenotype(conf);

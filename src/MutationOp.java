@@ -33,22 +33,16 @@ public class MutationOp extends MutationOperator {
         int tempIndex;
         ArrayList<Integer> swappedIndexes = new ArrayList<>();//array of indexes that has been already swapped
         for (IChromosome chromosome : chromosomes) {// looping over all chromosomes
-            System.out.println("1");
             chromosomeInRows = SudokuGa.getChromosomeRows(chromosome);// transforming chromosome to array of rows (array lists)
             for (ArrayList<Integer> chromosomeInRow : chromosomeInRows) { // going over all rows
-                System.out.println("2");
                 swappedIndexes.clear();// clearing the swapped indexes array
                 for (int k = 0; k < chromosomeInRow.size(); k++) {//going through all numbers in the row (row has only dynamic numbers)
-                    System.out.println("3");
                     if (getRandomNumber(0, rate) == 0 && !swappedIndexes.contains(k)) { //condition to swap this number with another
                         swappedIndexes.add(k);
                         do {
                             tempIndex = getRandomNumber(0, chromosomeInRow.size());
-                            System.out.println(swappedIndexes);
-                        }
-                        while (swappedIndexes.contains(tempIndex) && swappedIndexes.size() > 1);
+                        } while (swappedIndexes.contains(tempIndex) && swappedIndexes.size() < chromosomeInRow.size());
                         swappedIndexes.add(tempIndex);
-                        System.out.println(swappedIndexes);
                         tempVal = chromosomeInRow.get(tempIndex);
                         chromosomeInRow.set(tempIndex, chromosomeInRow.get(k));
                         chromosomeInRow.set(k, tempVal);
