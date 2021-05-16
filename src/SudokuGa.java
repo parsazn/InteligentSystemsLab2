@@ -51,9 +51,9 @@ public class SudokuGa {
         IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is one full sudoku with default values and random values
         conf.setSampleChromosome(sampleChromosome);
         conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
-//        GeneticOperator mutationOperator = new MutationOperator(conf, 3);
-////        GeneticOperator crossoverOperator = new CrossoverOperator(conf);
-//        conf.addGeneticOperator(mutationOperator);
+        GeneticOperator myMutationOperator = new MutationOp(conf, 12);
+//        GeneticOperator crossoverOperator = new CrossoverOperator(conf);
+        conf.addGeneticOperator(myMutationOperator);
 ////        conf.addGeneticOperator(crossoverOperator);
         Genotype population;
 
@@ -84,13 +84,14 @@ public class SudokuGa {
         }
     }
 
-    private static ArrayList<Integer>[] getChromosomeRows(IChromosome idx) {
+    public static ArrayList<Integer>[] getChromosomeRows(IChromosome idx) {
         @SuppressWarnings("unchecked") ArrayList<Integer>[] chromosomeRows = (ArrayList<Integer>[]) new ArrayList[SUDOKU_SIZE];
-        int[] chromosome = genes2Sudokus(idx);
+        int[] chromosome = chromosomeToArray(idx);
+        int k = 0;
         for (int i = 0; i < SUDOKU_SIZE; i++) {
             chromosomeRows[i] = new ArrayList<>();
             for (int j = 0; j < SUDOKU_SIZE; j++) {
-                if(!DefaultValues[i*SUDOKU_SIZE+j]) chromosomeRows[i].add(chromosome[i*SUDOKU_SIZE+j]);
+                if (!DefaultValues[i * SUDOKU_SIZE + j]) chromosomeRows[i].add(chromosome[k++]);
             }
         }
         return chromosomeRows;
@@ -100,9 +101,10 @@ public class SudokuGa {
         @SuppressWarnings("unchecked") ArrayList<Integer>[] chromosomePossibleNums = (ArrayList<Integer>[]) new ArrayList[SUDOKU_SIZE];
         ArrayList<Integer> possibleNums = new ArrayList<>();
         for (int i = 0; i < SUDOKU_SIZE; i++) {
-            chromosomePossibleNums[i] = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9));
+            chromosomePossibleNums[i] = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
             for (int j = 0; j < SUDOKU_SIZE; j++) {
-                if(sudoku_Lineal[i*SUDOKU_SIZE+j]!=0) chromosomePossibleNums[i].remove(Integer.valueOf(sudoku_Lineal[i*SUDOKU_SIZE+j]));
+                if (sudoku_Lineal[i * SUDOKU_SIZE + j] != 0)
+                    chromosomePossibleNums[i].remove(Integer.valueOf(sudoku_Lineal[i * SUDOKU_SIZE + j]));
             }
             Collections.shuffle(chromosomePossibleNums[i]);
             possibleNums.addAll(chromosomePossibleNums[i]);
@@ -113,7 +115,7 @@ public class SudokuGa {
     }
 
     //converting each chromosome to a lineal array ( so that we can change the Sudoku )
-    public static int[] genes2Sudokus(IChromosome idx) {
+    public static int[] chromosomeToArray(IChromosome idx) {
         int[] res = new int[idx.size()];
         for (int i = 0; i < res.length; i++) {
             res[i] = (int) idx.getGene(i).getAllele();
@@ -121,8 +123,23 @@ public class SudokuGa {
         return res;
     }
 
+    public static ArrayList<Integer> chromosomeRowsToLineal(ArrayList<Integer>[] chromosomeRows) {
+        ArrayList<Integer> linChromosome = new ArrayList<>();
+        for (ArrayList<Integer> chromosomeRow : chromosomeRows) {
+            linChromosome.addAll(chromosomeRow);
+        }
+        return linChromosome;
+    }
+
+    public static void chromosomeRowsToChromosome(ArrayList<Integer>[] chromosomeRows, IChromosome myChromosome) {
+        ArrayList<Integer> chromosomeLineal = chromosomeRowsToLineal(chromosomeRows);
+        for (int i = 0; i < chromosomeLineal.size(); i++) {
+            myChromosome.getGene(i).setAllele(chromosomeLineal.get(i));
+        }
+    }
+
     public static int[] chromosomeIntoSudoku(IChromosome idx) {
-        int[] chromosome = genes2Sudokus(idx);
+        int[] chromosome = chromosomeToArray(idx);
         int[] mainSudoku = SudokuGa.sudoku_Lineal.clone();
         int j = 0;
         for (int i = 0; i < mainSudoku.length; i++) {

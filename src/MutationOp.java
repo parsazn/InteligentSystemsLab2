@@ -4,6 +4,7 @@ import org.jgap.impl.MutationOperator;
 import org.jgap.IUniversalRateCalculator;
 import org.jgap.InvalidConfigurationException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MutationOp extends MutationOperator {
@@ -25,15 +26,34 @@ public class MutationOp extends MutationOperator {
     @Override
     public void operate(Population a_population, List a_candidateChromosomes) {
         super.operate(a_population, a_candidateChromosomes);
+        IChromosome[] chromosomes = a_population.toChromosomes();
         int rate = getMutationRate();
-        int[] currentChromosome;
-        for (int i = 0; i < a_candidateChromosomes.size(); i++) {
-//            currentChromosome = a_candidateChromosomes.get(i);// ToDO
-//            for (int j = 0; j < currentChromosome.length; j++) {
-//                if (getRandomNumber(0, rate + 1) == 0) {
-//                do some shit
-//                }
-//            }
+        ArrayList<Integer>[] chromosomeInRows;
+        int tempVal;
+        int tempIndex;
+        ArrayList<Integer> swappedIndexes = new ArrayList<>();
+        for (IChromosome chromosome : chromosomes) {
+            System.out.println("1");
+            chromosomeInRows = SudokuGa.getChromosomeRows(chromosome);
+            for (ArrayList<Integer> chromosomeInRow : chromosomeInRows) {
+                System.out.println("2");
+                for (int k = 0; k < chromosomeInRow.size(); k++) {
+                    System.out.println("3");
+                    if (getRandomNumber(0, rate) == 0 && !swappedIndexes.contains(k)) {
+                        swappedIndexes.add(k);
+//                        do {
+                            tempIndex = getRandomNumber(0, chromosomeInRow.size());
+                            System.out.println("4");
+//                        }
+//                        while (swappedIndexes.contains(tempIndex));
+                        swappedIndexes.add(tempIndex);
+                        tempVal = chromosomeInRow.get(tempIndex);
+                        chromosomeInRow.set(tempIndex, chromosomeInRow.get(k));
+                        chromosomeInRow.set(k, tempVal);
+                    }
+                }
+            }
+            SudokuGa.chromosomeRowsToChromosome(chromosomeInRows, chromosome);
         }
     }
 
