@@ -17,9 +17,9 @@ public class SudokuGa {
      * The total number of times we'll let the population evolve.
      */
 
-    private static final int MAX_ALLOWED_EVOLUTIONS = 140;
+    private static final int MAX_ALLOWED_EVOLUTIONS = 1400;
     private static final int MAX_ALLOWED_GENERATION = 40;
-    private static final int MAX_ALLOWED_POPULATION = 5;
+    private static final int MAX_ALLOWED_POPULATION = 50;
     private static final int SUDOKU_SIZE = 9; //  sudoku size = 9
     private static final int BLOCK_SIZE = 3;  //   block size = 3
     private static final int SUDOKU_TOTAL_SIZE = SUDOKU_SIZE * SUDOKU_SIZE;
@@ -51,10 +51,10 @@ public class SudokuGa {
         IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is one full sudoku with default values and random values
         conf.setSampleChromosome(sampleChromosome);
         conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
-        GeneticOperator myMutationOperator = new MutationOp(conf, 6);
-        GeneticOperator crossoverOperator = new CrossoverOp(conf);
+        GeneticOperator myMutationOperator = new MutationOp(conf, 60);
+        GeneticOperator myCrossoverOperator = new CrossoverOp(conf, 35);
         conf.addGeneticOperator(myMutationOperator);
-        conf.addGeneticOperator(crossoverOperator);
+        conf.addGeneticOperator(myCrossoverOperator);
         Genotype population;
 
         population = Genotype.randomInitialGenotype(conf);
@@ -148,6 +148,10 @@ public class SudokuGa {
             }
         }
         return mainSudoku;
+    }
+
+    public static int getRandomNumber(int min, int max) {
+        return (int) ((Math.random() * (max - min)) + min);
     }
 
     public static void main(String[] args) throws Exception {
