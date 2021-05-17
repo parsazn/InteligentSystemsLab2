@@ -1,30 +1,28 @@
 import com.qqwing.QQWing;
 import org.jgap.*;
-import org.jgap.impl.CrossoverOperator;
-import org.jgap.impl.DefaultConfiguration;
-import org.jgap.impl.IntegerGene;
-import org.jgap.impl.MutationOperator;
+import org.jgap.event.EventManager;
+import org.jgap.impl.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 
 public class SudokuGa {
-    private final static int NumElements = 81;
     private final static String CVS_REVISION = "$Revision: 1.10 $";
     /**
      * The total number of times we'll let the population evolve.
      */
 
-    private static final int MAX_ALLOWED_EVOLUTIONS = 1400;
-    private static final int MAX_ALLOWED_GENERATION = 40;
+    private static final int MAX_ALLOWED_EVOLUTIONS = 1400;//140
+    //    private static final int MAX_ALLOWED_GENERATION = 40;
     private static final int MAX_ALLOWED_POPULATION = 50;
-    private static final int SUDOKU_SIZE = 9; //  sudoku size = 9
-    private static final int BLOCK_SIZE = 3;  //   block size = 3
+    public static final int SUDOKU_SIZE = 9;
+    public static final int BLOCK_SIZE = 3;
     private static final int SUDOKU_TOTAL_SIZE = SUDOKU_SIZE * SUDOKU_SIZE;
     public static int[] sudoku_Lineal;
-    public static boolean[] DefaultValues = new boolean[81];//Here we create a new matrix same as the other but we check if the value is zero or not
+    public static boolean[] DefaultValues = new boolean[SUDOKU_TOTAL_SIZE];//Here we create a new matrix same as the other but we check if the value is zero or not
 
     public static void findSolution(QQWing s) throws Exception {
         //whole sudoku but in only one line
@@ -33,55 +31,85 @@ public class SudokuGa {
         for (int i : sudoku_Lineal) {
             arrayListSudoku.add(i);
         }
-        setNumbers(sudoku_Lineal, DefaultValues); //we get the default values in our sudoku (where the values are not 0 )
-        //Setting
-        // ---------------------------------------------------------------------
-        Configuration conf = new DefaultConfiguration();
-        conf.setPreservFittestIndividual(true); //Here we determine whether we want to save the fittest element(chromosome)
-        FitnessFunction myFunc = new FitnessFunc();
-        conf.setFitnessFunction(myFunc);
-        // ---------------------------------------------------------------------
-        Gene[] sampleGenes = new Gene[Collections.frequency(arrayListSudoku, 0)]; //array of Genes, Gene is single sudoku cell
+        setNumbers(sudoku_Lineal, DefaultValues); //we get array of booleans, true when there is default value
 
-        Integer[] possibleNumbers = getRandomizedChromosome();
-        for (int i = 0; i < possibleNumbers.length; i++) {
-            sampleGenes[i] = new IntegerGene(conf, possibleNumbers[i], possibleNumbers[i]);
-        }
-        // ---------------------------------------------------------------------
-        IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is one full sudoku with default values and random values
-        conf.setSampleChromosome(sampleChromosome);
+        ////////////////////////////              Configuration               /////////////////////////////////////////
+        Configuration conf = new Configuration();
+        GeneticOperator myMutationOperator = new MutationOp(conf, 8);// probability = 1/rate
+        GeneticOperator myCrossoverOperator = new CrossoverOp(conf, 40);// probability = rate/100
+        FitnessFunction myFunc = new FitnessFunc(); //our fitness function
+
+        conf.setMinimumPopSizePercent(0);// I don't know yet
+        conf.setKeepPopulationSizeConstant(false);//I don't know yet
+        conf.setChromosomePool(new ChromosomePool());//Not important from what i know
+        conf.setSelectFromPrevGen(1.0D);//Not sure what it is
         conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
-        GeneticOperator myMutationOperator = new MutationOp(conf, 60);
-        GeneticOperator myCrossoverOperator = new CrossoverOp(conf, 35);
-        conf.addGeneticOperator(myMutationOperator);
-        conf.addGeneticOperator(myCrossoverOperator);
-        Genotype population;
+        conf.addGeneticOperator(myMutationOperator);//our mutation operator
+        conf.addGeneticOperator(myCrossoverOperator);//our crossover operator
+        conf.setRandomGenerator(new GaussianRandomGenerator());//I don't know if we are using it but it's necessary
+        conf.setEventManager(new EventManager());//I don't know what is that but necessary
+        conf.setFitnessEvaluator(new DefaultFitnessEvaluator());//I don't know but necessary
+        conf.addNaturalSelector(new BestChromosomesSelector(conf, 0.9D), false);//not sure how it works
+        conf.setPreservFittestIndividual(true); //Here we determine whether we want to save the fittest element(chromosome)
+        conf.setFitnessFunction(myFunc);//we set our fitness function
 
-        population = Genotype.randomInitialGenotype(conf);
-        for (int i = 0; i < MAX_ALLOWED_EVOLUTIONS; i++) {
-            population.evolve();
+
+        Gene[] sampleGenes = new Gene[Collections.frequency(arrayListSudoku, 0)]; //array of Genes, Gene is single empty sudoku cell
+        Integer[] possibleNumbers = getRandomizedChromosome();//we are getting an array of possible numbers fitting row constraint
+        for (int i = 0; i < possibleNumbers.length; i++) {
+            sampleGenes[i] = new IntegerGene(conf, 1, 9);
         }
-        //we have a list of chromosomes which they have been evolved .
-        System.out.println("These are the evolutions so far");
-        IChromosome[] evols = population.getChromosomes();
-        for (IChromosome I : evols) {
-            s.setPuzzle(chromosomeIntoSudoku(I));
+        Chromosome sampleChromosome = new Chromosome(conf, sampleGenes);// chromosome is only dynamic values of sudoku
+
+        conf.setSampleChromosome(sampleChromosome); //we set sample chromosome
+
+
+        Genotype genotype;
+        genotype = fillPopulation(conf, sampleChromosome);//we fill the population with values that match row constraint
+        System.out.println("This is the initial population");
+        List<IChromosome> initialPop = genotype.getPopulation().getChromosomes();
+        for (IChromosome chromosome : initialPop) {
+            s.setPuzzle(chromosomeIntoSudoku(chromosome));
             s.printPuzzle();
         }
-        //here is the Best one
-        //toDo Complete FitnessFunc in order to find the best solution.
-        IChromosome bestSolutionSoFar = population.getFittestChromosome();
+        genotype.evolve(MAX_ALLOWED_EVOLUTIONS);//we evolve starting with initial population
+
+        System.out.println("These are the evolutions so far");
+        List<IChromosome> evolutions = genotype.getPopulation().getChromosomes();//list of evolved chromosomes,
+        // why size of max_population, are these the fittest from every previous population?.
+        for (IChromosome chromosome : evolutions) {
+            s.setPuzzle(chromosomeIntoSudoku(chromosome));
+            s.printPuzzle();
+        }
+        IChromosome bestSolutionSoFar = genotype.getFittestChromosome();
         System.out.println("The best solution has a fitness value of " +
                 bestSolutionSoFar.getFitnessValue());
         s.setPuzzle(chromosomeIntoSudoku(bestSolutionSoFar));
         s.printPuzzle();
     }
 
-    //we are trying to find the default values .
-    private static void setNumbers(int[] puzzle, boolean[] defaults) { //here we define the default values
+    private static void setNumbers(int[] puzzle, boolean[] defaults) { //e fill array of bool so we know where are default numbers
         for (int i = 0; i < puzzle.length; ++i) {
             defaults[i] = puzzle[i] != 0;
         }
+    }
+
+    private static Genotype fillPopulation(Configuration conf, Chromosome sampleChromosome) throws InvalidConfigurationException {
+        Population pop = new Population(conf, MAX_ALLOWED_POPULATION);
+        List<Chromosome> newChromosomes = new ArrayList<>();
+        Genotype result;
+
+        for (int i = 0; i < MAX_ALLOWED_POPULATION; i++) {
+            Chromosome newChromosome = (Chromosome) sampleChromosome.clone();
+            Integer[] chromosomeLineal = getRandomizedChromosome();
+            for (int j = 0; j < chromosomeLineal.length; j++) {
+                newChromosome.getGene(j).setAllele(chromosomeLineal[j]);
+            }
+            newChromosomes.add(newChromosome);
+        }
+        pop.setChromosomes(newChromosomes);
+        result = new Genotype(conf, pop);
+        return result;
     }
 
     public static ArrayList<Integer>[] getChromosomeRows(IChromosome idx) {
@@ -154,20 +182,30 @@ public class SudokuGa {
         return (int) ((Math.random() * (max - min)) + min);
     }
 
+    public static void printMyFuckingPuzzle(IChromosome chromosome) {
+        QQWing s = new QQWing();
+        s.setPuzzle(chromosomeIntoSudoku(chromosome));
+        s.printPuzzle();
+    }
+
     public static void main(String[] args) throws Exception {
         QQWing MySudoku = new QQWing();
         MySudoku.generatePuzzle();
         MySudoku.printPuzzle();
+        int[] initialPuzzle = MySudoku.getPuzzle();
         findSolution(MySudoku);
-       /* MySudoku = new QQWing();
-        MySudoku.generatePuzzle();
-        MySudoku.printPuzzle();
-        MySudoku.getPuzzle() ;
-        System.out.println(Arrays.toString(MySudoku.getPuzzle()));
-        //System.out.println(Arrays.toString(InitialSolutions(MySudoku.getPuzzle())));
+        /*
+         MySudoku = new QQWing();
+         MySudoku.generatePuzzle();
+         MySudoku.printPuzzle();
+         MySudoku.getPuzzle() ;
+         System.out.println(Arrays.toString(MySudoku.getPuzzle()));
+         //System.out.println(Arrays.toString(InitialSolutions(MySudoku.getPuzzle())));
+        */
+        System.out.println("Real solution");
+        MySudoku.setPuzzle(initialPuzzle);
         MySudoku.solve();
         MySudoku.printSolution();
-*/
     }
 }
 

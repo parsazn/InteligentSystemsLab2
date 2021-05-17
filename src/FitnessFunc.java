@@ -4,6 +4,8 @@ import org.jgap.IChromosome;
 
 //fitness function considers number of duplicated numbers in the array
 public class FitnessFunc extends FitnessFunction {
+    private final int sudokuSize = SudokuGa.SUDOKU_SIZE;
+
     @Override
     protected double evaluate(IChromosome iChromosome) {
         int[] chromosome = SudokuGa.chromosomeIntoSudoku(iChromosome);
@@ -23,38 +25,39 @@ public class FitnessFunc extends FitnessFunction {
         return uniqueValues;
     }
 
-    private int uniqueInRow(int[] numbers) {
-        int satisfiedConstraints = 0;
-        int[][] rows = new int[9][9];
-        for (int i = 0; i < 9; i++) {
-            System.arraycopy(numbers, i * 9, rows[i], 0, 9);
-            if (countDistinct(rows[i]) == 9) satisfiedConstraints += 1;
-        }
-        return satisfiedConstraints;
-    }
+//    private int uniqueInRow(int[] numbers) {
+//        int satisfiedConstraints = 0;
+//        int[][] rows = new int[sudokuSize][sudokuSize];
+//        for (int i = 0; i < sudokuSize; i++) {
+//            System.arraycopy(numbers, i * sudokuSize, rows[i], 0, sudokuSize);
+//            if (countDistinct(rows[i]) == sudokuSize) satisfiedConstraints += 1;
+//        }
+//        return satisfiedConstraints;
+//    }
 
     private int uniqueInColumn(int[] numbers) {
         int satisfiedConstraints = 0;
-        int[][] columns = new int[9][9];
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                columns[i][j] = numbers[i + 9 * j];
+        int[][] columns = new int[sudokuSize][sudokuSize];
+        for (int i = 0; i < sudokuSize; i++) {
+            for (int j = 0; j < sudokuSize; j++) {
+                columns[i][j] = numbers[i + sudokuSize * j];
             }
-            if (countDistinct(columns[i]) == 9) satisfiedConstraints += 1;
+            if (countDistinct(columns[i]) == sudokuSize) satisfiedConstraints += 1;
         }
         return satisfiedConstraints;
     }
 
     private int uniqueInSquare(int[] numbers) {
         int satisfiedConstraints = 0;
-        int[][] squares = new int[9][9];
-        for (int k = 0; k < 9; k++) {
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    squares[k][j + i * 3] = numbers[(3 * (k % 3) + j + (i + k / 3 * 3) * 9)];
+        int[][] squares = new int[sudokuSize][sudokuSize];
+        int blockSize = SudokuGa.BLOCK_SIZE;
+        for (int k = 0; k < sudokuSize; k++) {
+            for (int i = 0; i < blockSize; i++) {
+                for (int j = 0; j < blockSize; j++) {
+                    squares[k][j + i * blockSize] = numbers[(blockSize * (k % blockSize) + j + (i + k / blockSize * blockSize) * sudokuSize)];
                 }
             }
-            if (countDistinct(squares[k]) == 9) satisfiedConstraints += 1;
+            if (countDistinct(squares[k]) == sudokuSize) satisfiedConstraints += 1;
         }
         return satisfiedConstraints;
     }

@@ -1,22 +1,14 @@
 import org.jgap.*;
 import org.jgap.Configuration;
 import org.jgap.impl.MutationOperator;
-import org.jgap.IUniversalRateCalculator;
 import org.jgap.InvalidConfigurationException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MutationOp extends MutationOperator {
-    public MutationOp() throws InvalidConfigurationException {
-    }
-
     public MutationOp(Configuration a_conf) throws InvalidConfigurationException {
-        super(a_conf);
-    }
-
-    public MutationOp(Configuration a_config, IUniversalRateCalculator a_mutationRateCalculator) throws InvalidConfigurationException {
-        super(a_config, a_mutationRateCalculator);
+        super(a_conf, 10);
     }
 
     public MutationOp(Configuration a_config, int a_desiredMutationRate) throws InvalidConfigurationException {
@@ -25,12 +17,11 @@ public class MutationOp extends MutationOperator {
 
     @Override
     public void operate(Population a_population, List a_candidateChromosomes) {
-        //super.operate(a_population, a_candidateChromosomes); // do i need this?
         IChromosome[] chromosomes = a_population.toChromosomes();// array of chromosomes in the population
         int rate = getMutationRate();//current rate
         ArrayList<Integer>[] chromosomeInRows;
         IChromosome newChromosome;
-        boolean mutated = false;
+        boolean mutated;
         int tempVal;
         int tempIndex;
         ArrayList<Integer> swappedIndexes = new ArrayList<>();//array of indexes that has been already swapped
@@ -55,11 +46,10 @@ public class MutationOp extends MutationOperator {
             }
             if (mutated) {
                 newChromosome = (IChromosome) chromosome.clone();
-                SudokuGa.chromosomeRowsToChromosome(chromosomeInRows, chromosome);
+                SudokuGa.chromosomeRowsToChromosome(chromosomeInRows, newChromosome);
+                //noinspection unchecked
                 a_candidateChromosomes.add(newChromosome);
             }
         }
     }
-
-
 }
