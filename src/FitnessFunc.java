@@ -9,7 +9,8 @@ public class FitnessFunc extends FitnessFunction {
     @Override
     protected double evaluate(IChromosome iChromosome) {
         int[] chromosome = SudokuGa.chromosomeIntoSudoku(iChromosome);
-        return uniqueInColumn(chromosome) + uniqueInSquare(chromosome);
+        return uniqueInColumn2(chromosome) + uniqueInSquare2(chromosome);
+//        return uniqueInColumn(chromosome) + uniqueInSquare(chromosome);
     }
 
     private int countDistinct(int[] arr) {
@@ -47,6 +48,18 @@ public class FitnessFunc extends FitnessFunction {
         return satisfiedConstraints;
     }
 
+    private int uniqueInColumn2(int[] numbers) {
+        int satisfiedConstraints = 0;
+        int[][] columns = new int[sudokuSize][sudokuSize];
+        for (int i = 0; i < sudokuSize; i++) {
+            for (int j = 0; j < sudokuSize; j++) {
+                columns[i][j] = numbers[i + sudokuSize * j];
+            }
+            satisfiedConstraints += countDistinct(columns[i]);
+        }
+        return satisfiedConstraints;
+    }
+
     private int uniqueInSquare(int[] numbers) {
         int satisfiedConstraints = 0;
         int[][] squares = new int[sudokuSize][sudokuSize];
@@ -58,6 +71,21 @@ public class FitnessFunc extends FitnessFunction {
                 }
             }
             if (countDistinct(squares[k]) == sudokuSize) satisfiedConstraints += 1;
+        }
+        return satisfiedConstraints;
+    }
+
+    private int uniqueInSquare2(int[] numbers) {
+        int satisfiedConstraints = 0;
+        int[][] squares = new int[sudokuSize][sudokuSize];
+        int blockSize = SudokuGa.BLOCK_SIZE;
+        for (int k = 0; k < sudokuSize; k++) {
+            for (int i = 0; i < blockSize; i++) {
+                for (int j = 0; j < blockSize; j++) {
+                    squares[k][j + i * blockSize] = numbers[(blockSize * (k % blockSize) + j + (i + k / blockSize * blockSize) * sudokuSize)];
+                }
+            }
+            satisfiedConstraints += countDistinct(squares[k]);
         }
         return satisfiedConstraints;
     }
