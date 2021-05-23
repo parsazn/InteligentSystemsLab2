@@ -3,6 +3,9 @@ import org.jgap.*;
 import org.jgap.event.EventManager;
 import org.jgap.impl.*;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,19 +13,20 @@ import java.util.List;
 
 
 public class SudokuGa {
+    public static final int SUDOKU_SIZE = 9;
+    public static final int BLOCK_SIZE = 3;
     private final static String CVS_REVISION = "$Revision: 1.10 $";
     /**
      * The total number of times we'll let the population evolve.
      */
 
-    private static final int MAX_ALLOWED_EVOLUTIONS = 1400;//140
-    //    private static final int MAX_ALLOWED_GENERATION = 40;
-    private static final int MAX_ALLOWED_POPULATION = 2000;
-    public static final int SUDOKU_SIZE = 9;
-    public static final int BLOCK_SIZE = 3;
+    private static final int MAX_ALLOWED_EVOLUTIONS = 640;//140
+    private static final int MAX_ALLOWED_POPULATION = 1000;
     private static final int SUDOKU_TOTAL_SIZE = SUDOKU_SIZE * SUDOKU_SIZE;
     public static int[] sudoku_Lineal;
     public static boolean[] DefaultValues = new boolean[SUDOKU_TOTAL_SIZE];//Here we create a new matrix same as the other but we check if the value is zero or not
+    private static boolean printFitness = true;
+    private static boolean easyPuzzle = false;
 
     public static void findSolution(QQWing s) throws Exception {
         //whole sudoku but in only one line
@@ -39,17 +43,17 @@ public class SudokuGa {
         GeneticOperator myCrossoverOperator = new CrossoverOp(conf, 95);// probability = rate/100 default 100
         FitnessFunction myFunc = new FitnessFunc(); //our fitness function
 
-        conf.setMinimumPopSizePercent(0);// I don't know yet
-        conf.setKeepPopulationSizeConstant(false);//I don't know yet
-        conf.setChromosomePool(new ChromosomePool());//Not important from what i know
-        conf.setSelectFromPrevGen(1D);//Not sure what it is
+        conf.setMinimumPopSizePercent(0);
+        conf.setKeepPopulationSizeConstant(false);
+        conf.setChromosomePool(new ChromosomePool());
+        conf.setSelectFromPrevGen(1D);
         conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
         conf.addGeneticOperator(myMutationOperator);//our mutation operator
         conf.addGeneticOperator(myCrossoverOperator);//our crossover operator
-        conf.setRandomGenerator(new GaussianRandomGenerator());//I don't know if we are using it but it's necessary
-        conf.setEventManager(new EventManager());//I don't know what is that but necessary
-        conf.setFitnessEvaluator(new DefaultFitnessEvaluator());//I don't know but necessary
-        conf.addNaturalSelector(new BestChromosomesSelector(conf, 0.9D), false);//not sure how it works
+        conf.setRandomGenerator(new GaussianRandomGenerator());// it's necessary
+        conf.setEventManager(new EventManager());
+        conf.setFitnessEvaluator(new DefaultFitnessEvaluator());
+        conf.addNaturalSelector(new BestChromosomesSelector(conf, 0.9D), false);
         conf.setPreservFittestIndividual(true); //Here we determine whether we want to save the fittest element(chromosome)
         conf.setFitnessFunction(myFunc);//we set our fitness function
 
@@ -70,8 +74,8 @@ public class SudokuGa {
         List<IChromosome> initialPop = genotype.getPopulation().getChromosomes();
         double bestFitness = 0;
         for (IChromosome chromosome : initialPop) {
-            if(bestFitness<chromosome.getFitnessValue()) {
-                bestFitness=chromosome.getFitnessValue();
+            if (bestFitness < chromosome.getFitnessValue()) {
+                bestFitness = chromosome.getFitnessValue();
                 System.out.println(bestFitness);
             }
         }
@@ -81,22 +85,24 @@ public class SudokuGa {
         for (int i = 0; i < MAX_ALLOWED_EVOLUTIONS; i++) {
             genotype.evolve();
             IChromosome bestChromosome = genotype.getPopulation().determineFittestChromosome();//list of evolved chromosomes,
-            if(bestFitness<bestChromosome.getFitnessValue()) {
-                bestFitness=bestChromosome.getFitnessValue();
+            if (bestFitness < bestChromosome.getFitnessValue()) {
+                bestFitness = bestChromosome.getFitnessValue();
+                if(printFitness){ //here we write the results in a txt format file
+                    List<IChromosome> totalChroms = genotype.getPopulation().getChromosomes();
+                    int num =0;
+                    double res =0 ;
+                    for(IChromosome c : totalChroms){
+                       ++num ;
+                       res +=c.getFitnessValue();
+                    }
+                    double average = res/num ;
+                    writeTextFile("bestFitness.txt",i,bestFitness);
+                    writeTextFile("meanFitness.txt",i,average);
+                }
                 System.out.println(bestFitness);
             }
-            if(bestFitness==162) break;
+            if (bestFitness == 162) break;
         }
-//        List<IChromosome> evolutions = genotype.getPopulation().getChromosomes();//list of evolved chromosomes,
-        // why size of max_population, are these the fittest from every previous population?.
-//        for (IChromosome chromosome : evolutions) {
-//            if(bestFitness<chromosome.getFitnessValue()) {
-//                bestFitness=chromosome.getFitnessValue();
-//                System.out.println(bestFitness);
-//            }
-////            s.setPuzzle(chromosomeIntoSudoku(chromosome));
-////            s.printPuzzle();
-//        }
         IChromosome bestSolutionSoFar = genotype.getFittestChromosome();
         System.out.println("The best solution has a fitness value of " +
                 bestSolutionSoFar.getFitnessValue());
@@ -198,28 +204,29 @@ public class SudokuGa {
         return (int) ((Math.random() * (max - min)) + min);
     }
 
-    public static void printMyFuckingPuzzle(IChromosome chromosome) {
+    public static void printCurrentPuzzle(IChromosome chromosome) {
         QQWing s = new QQWing();
         s.setPuzzle(chromosomeIntoSudoku(chromosome));
         s.printPuzzle();
     }
 
+    public static void writeTextFile(String name ,int i ,double a) throws IOException {
+        FileWriter fileWriter = new FileWriter(name,true) ;
+        PrintWriter printWriter = new PrintWriter(fileWriter);
+        printWriter.println(i +" "+a);  //New line
+        printWriter.close();
+    }
+
     public static void main(String[] args) throws Exception {
         QQWing MySudoku = new QQWing();
         MySudoku.generatePuzzle();
-//        int[] easyPuzzle = {6,2,0,3,9,0,0,0,1,0,4,0,0,0,0,2,9,0,1,0,8,0,6,0,0,0,0,4,0,2,0,0,8,9,0,0,0,0,0,9,0,1,4,0,2,3,1,0,0,7,0,0,0,8,9,0,0,0,2,3,8,0,5,2,6,0,5,8,0,3,0,0,8,3,0,0,0,0,1,2,9};
-//        MySudoku.setPuzzle(easyPuzzle);
+        if (easyPuzzle) { //in case if the user wants to solve an easy sudoku
+            int[] easyPuzzle = {6, 2, 0, 3, 9, 0, 0, 0, 1, 0, 4, 0, 0, 0, 0, 2, 9, 0, 1, 0, 8, 0, 6, 0, 0, 0, 0, 4, 0, 2, 0, 0, 8, 9, 0, 0, 0, 0, 0, 9, 0, 1, 4, 0, 2, 3, 1, 0, 0, 7, 0, 0, 0, 8, 9, 0, 0, 0, 2, 3, 8, 0, 5, 2, 6, 0, 5, 8, 0, 3, 0, 0, 8, 3, 0, 0, 0, 0, 1, 2, 9};
+            MySudoku.setPuzzle(easyPuzzle);
+        }
         MySudoku.printPuzzle();
         int[] initialPuzzle = MySudoku.getPuzzle();
         findSolution(MySudoku);
-        /*
-         MySudoku = new QQWing();
-         MySudoku.generatePuzzle();
-         MySudoku.printPuzzle();
-         MySudoku.getPuzzle() ;
-         System.out.println(Arrays.toString(MySudoku.getPuzzle()));
-         //System.out.println(Arrays.toString(InitialSolutions(MySudoku.getPuzzle())));
-        */
         System.out.println("Real solution");
         MySudoku.setPuzzle(initialPuzzle);
         MySudoku.solve();

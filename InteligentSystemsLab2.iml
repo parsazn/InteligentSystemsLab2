@@ -28,5 +28,7 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="library" name="jpag" level="project" />
+    <orderEntry type="library" name="qqwing-1.3.4" level="project" />
   </component>
 </module>
