@@ -20,13 +20,13 @@ public class SudokuGa {
      * The total number of times we'll let the population evolve.
      */
 
-    private static final int MAX_ALLOWED_EVOLUTIONS = 640;//140
+    private static final int MAX_ALLOWED_EVOLUTIONS = 1400;//140
     private static final int MAX_ALLOWED_POPULATION = 1000;
     private static final int SUDOKU_TOTAL_SIZE = SUDOKU_SIZE * SUDOKU_SIZE;
     public static int[] sudoku_Lineal;
     public static boolean[] DefaultValues = new boolean[SUDOKU_TOTAL_SIZE];//Here we create a new matrix same as the other but we check if the value is zero or not
     private static boolean printFitness = true;
-    private static boolean easyPuzzle = false;
+    private static boolean easyPuzzle = true;
 
     public static void findSolution(QQWing s) throws Exception {
         //whole sudoku but in only one line
@@ -221,6 +221,7 @@ public class SudokuGa {
         QQWing MySudoku = new QQWing();
         MySudoku.generatePuzzle();
         if (easyPuzzle) { //in case if the user wants to solve an easy sudoku
+            System.out.println("Easy pazzle has been selected");
             int[] easyPuzzle = {6, 2, 0, 3, 9, 0, 0, 0, 1, 0, 4, 0, 0, 0, 0, 2, 9, 0, 1, 0, 8, 0, 6, 0, 0, 0, 0, 4, 0, 2, 0, 0, 8, 9, 0, 0, 0, 0, 0, 9, 0, 1, 4, 0, 2, 3, 1, 0, 0, 7, 0, 0, 0, 8, 9, 0, 0, 0, 2, 3, 8, 0, 5, 2, 6, 0, 5, 8, 0, 3, 0, 0, 8, 3, 0, 0, 0, 0, 1, 2, 9};
             MySudoku.setPuzzle(easyPuzzle);
         }
