@@ -13,20 +13,19 @@ import java.util.List;
 
 
 public class SudokuGa {
-    public static final int SUDOKU_SIZE = 9;
-    public static final int BLOCK_SIZE = 3;
-    private final static String CVS_REVISION = "$Revision: 1.10 $";
+    public static final int SUDOKU_SIZE = 9; 
+    public static final int BLOCK_SIZE = 3; 
     /**
      * The total number of times we'll let the population evolve.
      */
 
-    private static final int MAX_ALLOWED_EVOLUTIONS = 1400;//140
-    private static final int MAX_ALLOWED_POPULATION = 1000;
+    private static int maxAllowedEvolutions = 1400;//140 *
+    private static int maxAllowedPopulation = 1000; // *
+    
     private static final int SUDOKU_TOTAL_SIZE = SUDOKU_SIZE * SUDOKU_SIZE;
     public static int[] sudoku_Lineal;
     public static boolean[] DefaultValues = new boolean[SUDOKU_TOTAL_SIZE];//Here we create a new matrix same as the other but we check if the value is zero or not
     private static boolean printFitness = true;
-    private static boolean easyPuzzle = true;
 
     public static void findSolution(QQWing s) throws Exception {
         //whole sudoku but in only one line
@@ -47,7 +46,7 @@ public class SudokuGa {
         conf.setKeepPopulationSizeConstant(false);
         conf.setChromosomePool(new ChromosomePool());
         conf.setSelectFromPrevGen(1D);
-        conf.setPopulationSize(MAX_ALLOWED_POPULATION);//population is a set of generated sudokus in one evolution
+        conf.setPopulationSize(maxAllowedPopulation);//population is a set of generated sudokus in one evolution
         conf.addGeneticOperator(myMutationOperator);//our mutation operator
         conf.addGeneticOperator(myCrossoverOperator);//our crossover operator
         conf.setRandomGenerator(new GaussianRandomGenerator());// it's necessary
@@ -79,10 +78,9 @@ public class SudokuGa {
                 System.out.println(bestFitness);
             }
         }
-//        genotype.evolve(MAX_ALLOWED_EVOLUTIONS);//we evolve starting with initial population
 
         System.out.println("These are the evolutions so far");
-        for (int i = 0; i < MAX_ALLOWED_EVOLUTIONS; i++) {
+        for (int i = 0; i < maxAllowedEvolutions; i++) {
             genotype.evolve();
             IChromosome bestChromosome = genotype.getPopulation().determineFittestChromosome();//list of evolved chromosomes,
             if (bestFitness < bestChromosome.getFitnessValue()) {
@@ -109,6 +107,14 @@ public class SudokuGa {
         s.setPuzzle(chromosomeIntoSudoku(bestSolutionSoFar));
         s.printPuzzle();
     }
+    
+    public static void setMaxAllowedEvolutions(int newMax) {
+    	maxAllowedEvolutions = newMax;
+    }
+    
+    public static void setMaxAllowedPopulation(int newMax) {
+    	maxAllowedPopulation = newMax;
+    }
 
     private static void setNumbers(int[] puzzle, boolean[] defaults) { //e fill array of bool so we know where are default numbers
         for (int i = 0; i < puzzle.length; ++i) {
@@ -117,11 +123,11 @@ public class SudokuGa {
     }
 
     private static Genotype fillPopulation(Configuration conf, Chromosome sampleChromosome) throws InvalidConfigurationException {
-        Population pop = new Population(conf, MAX_ALLOWED_POPULATION);
+        Population pop = new Population(conf, maxAllowedPopulation);
         List<Chromosome> newChromosomes = new ArrayList<>();
         Genotype result;
 
-        for (int i = 0; i < MAX_ALLOWED_POPULATION; i++) {
+        for (int i = 0; i < maxAllowedPopulation; i++) {
             Chromosome newChromosome = (Chromosome) sampleChromosome.clone();
             Integer[] chromosomeLineal = getRandomizedChromosome();
             for (int j = 0; j < chromosomeLineal.length; j++) {
@@ -215,23 +221,6 @@ public class SudokuGa {
         PrintWriter printWriter = new PrintWriter(fileWriter);
         printWriter.println(i +" "+a);  //New line
         printWriter.close();
-    }
-
-    public static void main(String[] args) throws Exception {
-        QQWing MySudoku = new QQWing();
-        MySudoku.generatePuzzle();
-        if (easyPuzzle) { //in case if the user wants to solve an easy sudoku
-            System.out.println("Easy pazzle has been selected");
-            int[] easyPuzzle = {6, 2, 0, 3, 9, 0, 0, 0, 1, 0, 4, 0, 0, 0, 0, 2, 9, 0, 1, 0, 8, 0, 6, 0, 0, 0, 0, 4, 0, 2, 0, 0, 8, 9, 0, 0, 0, 0, 0, 9, 0, 1, 4, 0, 2, 3, 1, 0, 0, 7, 0, 0, 0, 8, 9, 0, 0, 0, 2, 3, 8, 0, 5, 2, 6, 0, 5, 8, 0, 3, 0, 0, 8, 3, 0, 0, 0, 0, 1, 2, 9};
-            MySudoku.setPuzzle(easyPuzzle);
-        }
-        MySudoku.printPuzzle();
-        int[] initialPuzzle = MySudoku.getPuzzle();
-        findSolution(MySudoku);
-        System.out.println("Real solution");
-        MySudoku.setPuzzle(initialPuzzle);
-        MySudoku.solve();
-        MySudoku.printSolution();
     }
 }
 

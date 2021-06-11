@@ -6,7 +6,12 @@ import java.util.List;
 
 public class CrossoverOp extends CrossoverOperator {
 
-    public CrossoverOp(Configuration a_configuration) throws InvalidConfigurationException {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2201739806650240643L;
+
+	public CrossoverOp(Configuration a_configuration) throws InvalidConfigurationException {
         super(a_configuration, 30);
     }
 

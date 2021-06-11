@@ -9,3 +9,5 @@
 /.idea/
 *.iml
 /.out
+../meanFitness.txt
+../bestFitness.txt
